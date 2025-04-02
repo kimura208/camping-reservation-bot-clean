@@ -1,0 +1,15 @@
+name: Check Camping Availability
+
+on:
+  schedule:
+    # 15分ごとに実行（UTCタイムゾーン）
+    - cron: '*/15 * * * *'
+  workflow_dispatch: # 手動実行用
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call check-availability API
+        run: |
+          curl -X GET "https://camping-reservation-bot-clean.vercel.app/api/check-availability"
