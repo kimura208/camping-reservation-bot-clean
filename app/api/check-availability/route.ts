@@ -27,45 +27,74 @@ async function sendLineNotification(message: string) {
 }
 
 // キャンプ場の空き状況をチェックする関数
-async function checkCampingAvailability(url: string, date: string) {
+async function checkCampingAvailability(baseUrl: string, date: string) {
   try {
-    console.log(`Checking availability for ${date} at ${url}`)
+    console.log(`Checking availability for ${date} at ${baseUrl}`)
 
-    // キャンプ場のWebサイトにアクセス
-    const response = await axios.get(url)
+    // フレームセットの代わりに直接プラン一覧ページにアクセス
+    // URLを分析して適切なパラメータを設定
+    // 例: ../planlist.asp?mode=seek&clmode=true&hcod1=08300&hcod2=001&reffrom=&hchannel=&kasho=
+    const planlistUrl = `${baseUrl}/planlist.asp?mode=seek&clmode=true&hcod1=08300&hcod2=001`
+
+    console.log(`Accessing plan list URL: ${planlistUrl}`)
+
+    // ユーザーエージェントを設定してブラウザのように見せる
+    const response = await axios.get(planlistUrl, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+        Accept: "text/html,application/xhtml+xml,application/xml",
+        "Accept-Language": "ja,en-US;q=0.9,en;q=0.8",
+      },
+    })
+
     const html = response.data
+    console.log("Response received, parsing HTML...")
+
+    // HTMLを解析
     const $ = cheerio.load(html)
 
-    // ここに実際のスクレイピングロジックを実装
-    // 例: 特定の日付の予約ボタンや「満室」表示を探す
-    // 注意: 実際のサイト構造に合わせて調整が必要です
+    // デバッグ: ページのタイトルを出力
+    console.log(`Page title: ${$("title").text()}`)
 
-    // 例: 「予約可能」または「空き」というテキストを含む要素を探す
-    const availabilityElements = $('*:contains("予約可能"), *:contains("空き")')
+    // 日付文字列を整形（例: 2025-07-26 → 2025年7月26日）
+    const dateParts = date.split("-")
+    const formattedDate = `${dateParts[0]}年${Number.parseInt(dateParts[1])}月${Number.parseInt(dateParts[2])}日`
+    console.log(`Looking for date: ${formattedDate}`)
 
-    // 指定した日付に関連する要素だけをフィルタリング
-    // 注意: 実際のサイト構造に合わせて調整が必要です
-    const dateElements = $(`*:contains("${date}")`)
+    // 日付を含む要素を探す
+    const dateElements = $(`*:contains("${formattedDate}")`)
+    console.log(`Found ${dateElements.length} elements containing the date`)
 
-    // 日付要素の近くに「予約可能」要素があるかチェック
-    let isAvailable = false
+    // 「空き」「予約可能」などのテキストを探す
+    let availabilityFound = false
 
-    dateElements.each((i, dateEl) => {
-      // 日付要素の親要素または近くの要素をチェック
-      const parentEl = $(dateEl).parent()
-      if (parentEl.text().includes("予約可能") || parentEl.text().includes("空き")) {
-        isAvailable = true
+    dateElements.each((i, el) => {
+      // 日付要素の周辺（親、兄弟、子要素）をチェック
+      const parentEl = $(el).parent()
+      const parentText = parentEl.text()
+
+      console.log(`Element ${i} text: ${$(el).text()}`)
+      console.log(`Parent text: ${parentText}`)
+
+      // 「空き」「予約可能」「○」などの文字列を探す
+      if (
+        parentText.includes("空き") ||
+        parentText.includes("予約可能") ||
+        parentText.includes("○") ||
+        // 「×」「満室」などがない場合も空きの可能性がある
+        (!parentText.includes("×") && !parentText.includes("満室"))
+      ) {
+        availabilityFound = true
+        console.log(`Availability found in element ${i}`)
       }
     })
 
-    // デバッグ情報
-    console.log(`Date elements found: ${dateElements.length}`)
-    console.log(`Availability status: ${isAvailable ? "空きあり" : "満室"}`)
-
+    // 結果を返す
     return {
-      isAvailable,
+      isAvailable: availabilityFound,
       date,
-      url,
+      url: planlistUrl,
     }
   } catch (error) {
     console.error("Error checking camping availability:", error)
@@ -73,7 +102,7 @@ async function checkCampingAvailability(url: string, date: string) {
       isAvailable: false,
       error: "チェック中にエラーが発生しました",
       date,
-      url,
+      url: baseUrl,
     }
   }
 }
@@ -99,7 +128,7 @@ export async function GET() {
 
     // 空きがあった場合、LINE通知を送信
     if (result.isAvailable) {
-      const message = `${checkDate}の孫太郎オートキャンプ場に空きが出ました！\n今すぐ予約しましょう！\n予約ページ: ${campingUrl}`
+      const message = `${checkDate}の孫太郎オートキャンプ場に空きが出ました！\n今すぐ予約しましょう！\n予約ページ: ${result.url}`
       await sendLineNotification(message)
       console.log("空きが見つかりました！通知を送信しました。")
     } else {
