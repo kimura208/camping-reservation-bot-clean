@@ -31,9 +31,10 @@ async function checkCampingAvailability(date: string) {
   try {
     console.log(`Checking availability for ${date}`)
 
-    // 孫太郎オートキャンプ場の予約ページURLを設定
-    // 注: 実際の予約ページURLは環境変数から取得するか、調査して正確なURLを設定する必要があります
-    const reservePageUrl = "https://magotarou.com/reserve/"
+    // 孫太郎オートキャンプ場の予約ページURL
+    const reservePageUrl =
+      process.env.NEXT_PUBLIC_CAMPING_URL ||
+      "https://asp.hotel-story.ne.jp/ver3d/di/?hcod1=08300&hcod2=001&seek=on&def=seek"
 
     console.log(`Accessing reserve page: ${reservePageUrl}`)
 
@@ -56,59 +57,13 @@ async function checkCampingAvailability(date: string) {
     // デバッグ: ページのタイトルを出力
     console.log(`Page title: ${$("title").text()}`)
 
-    // 予約ページから実際の予約システムへのリンクを探す
-    const reserveLinks = $('a[href*="reserve"]')
-    console.log(`Found ${reserveLinks.length} reserve links`)
-
-    // リンクを出力（デバッグ用）
-    reserveLinks.each((i, el) => {
-      console.log(`Link ${i}: ${$(el).attr("href")}`)
-    })
-
-    // 実際の予約システムのURLを特定
-    // 注: これは実際のサイト構造によって調整が必要です
-    let actualReserveUrl = ""
-    reserveLinks.each((i, el) => {
-      const href = $(el).attr("href")
-      if (href && (href.includes("asp.hotel-story") || href.includes("reservation"))) {
-        actualReserveUrl = href
-        console.log(`Found actual reservation system URL: ${actualReserveUrl}`)
-        return false // eachループを抜ける
-      }
-    })
-
-    // 予約システムのURLが見つからなかった場合
-    if (!actualReserveUrl) {
-      console.log("Could not find actual reservation system URL")
-      return {
-        isAvailable: false,
-        error: "予約システムのURLが見つかりませんでした",
-        date,
-        url: reservePageUrl,
-      }
-    }
-
-    // 実際の予約システムにアクセス
-    console.log(`Accessing actual reservation system: ${actualReserveUrl}`)
-    const reserveResponse = await axios.get(actualReserveUrl, {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-        Accept: "text/html,application/xhtml+xml,application/xml",
-        "Accept-Language": "ja,en-US;q=0.9,en;q=0.8",
-      },
-    })
-
-    const reserveHtml = reserveResponse.data
-    const $reserve = cheerio.load(reserveHtml)
-
     // 日付文字列を整形（例: 2025-07-26 → 2025年7月26日）
     const dateParts = date.split("-")
     const formattedDate = `${dateParts[0]}年${Number.parseInt(dateParts[1])}月${Number.parseInt(dateParts[2])}日`
     console.log(`Looking for date: ${formattedDate}`)
 
     // 日付を含む要素を探す
-    const dateElements = $reserve(`*:contains("${formattedDate}")`)
+    const dateElements = $(`*:contains("${formattedDate}")`)
     console.log(`Found ${dateElements.length} elements containing the date`)
 
     // 「空き」「予約可能」などのテキストを探す
@@ -116,10 +71,10 @@ async function checkCampingAvailability(date: string) {
 
     dateElements.each((i, el) => {
       // 日付要素の周辺（親、兄弟、子要素）をチェック
-      const parentEl = $reserve(el).parent()
+      const parentEl = $(el).parent()
       const parentText = parentEl.text()
 
-      console.log(`Element ${i} text: ${$reserve(el).text()}`)
+      console.log(`Element ${i} text: ${$(el).text()}`)
       console.log(`Parent text: ${parentText}`)
 
       // 「空き」「予約可能」「○」などの文字列を探す
@@ -139,7 +94,7 @@ async function checkCampingAvailability(date: string) {
     return {
       isAvailable: availabilityFound,
       date,
-      url: actualReserveUrl,
+      url: reservePageUrl,
     }
   } catch (error) {
     console.error("Error checking camping availability:", error)
@@ -147,7 +102,9 @@ async function checkCampingAvailability(date: string) {
       isAvailable: false,
       error: "チェック中にエラーが発生しました",
       date,
-      url: "https://magotarou.com/reserve/",
+      url:
+        process.env.NEXT_PUBLIC_CAMPING_URL ||
+        "https://asp.hotel-story.ne.jp/ver3d/di/?hcod1=08300&hcod2=001&seek=on&def=seek",
     }
   }
 }
@@ -155,17 +112,9 @@ async function checkCampingAvailability(date: string) {
 export async function GET() {
   try {
     // 環境変数から情報を取得
-    const checkDate = process.env.NEXT_PUBLIC_CHECK_DATE || ""
+    const checkDate = process.env.NEXT_PUBLIC_CHECK_DATE || "2025-07-26" // デフォルト値を設定
 
-    if (!checkDate) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "環境変数NEXT_PUBLIC_CHECK_DATEが設定されていません",
-        },
-        { status: 400 },
-      )
-    }
+    console.log(`Starting availability check for date: ${checkDate}`)
 
     // 実際にキャンプ場の空き状況をチェック
     const result = await checkCampingAvailability(checkDate)
@@ -196,3 +145,5 @@ export async function GET() {
     )
   }
 }
+
+

@@ -10,6 +10,11 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - name: Call check-availability API
+      - name: Check availability
         run: |
-          curl -X GET "https://camping-reservation-bot-clean.vercel.app/api/check-availability"
+          curl -X GET "https://camping-reservation-bot-new.vercel.app/api/check-availability"
+        continue-on-error: true # エラーが発生しても続行
+      
+      - name: Report status
+        run: |
+          echo "Availability check completed at $(date)"
