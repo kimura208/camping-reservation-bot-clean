@@ -18,6 +18,10 @@ async function sendLineNotification(message: string) {
       body: JSON.stringify({ message }),
     })
 
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
     const data = await response.json()
     return data.success
   } catch (error) {
@@ -131,7 +135,7 @@ export async function POST(request: Request) {
   }
 }
 
-// GETメソッドを追加
+// GETメソッドを実装
 export async function GET() {
   try {
     // 環境変数から情報を取得
