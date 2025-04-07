@@ -1,18 +1,7 @@
-name: Check Camping Availability
-
-on:
-  schedule:
-    # 15分ごとに実行（UTCタイムゾーン）
-    - cron: '*/15 * * * *'
-  workflow_dispatch: # 手動実行用のトリガー
-
-jobs:
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        
-      - name: Set up Node.js
-        uses: actions/setup-node@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "framework": "nextjs"
+}
 
