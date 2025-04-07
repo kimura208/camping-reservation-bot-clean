@@ -9,25 +9,8 @@ const nextConfig = {
     // 本番ビルド時にTypeScriptエラーを無視する
     ignoreBuildErrors: true,
   },
-  // Webpackの設定をカスタマイズ
-  webpack: (config, { isServer }) => {
-    // undiciモジュールの問題を回避
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        net: false,
-        tls: false,
-        undici: false,
-      }
-    }
-
-    return config
-  },
-  // 実験的機能を有効化
-  experimental: {
-    serverComponentsExternalPackages: ["axios", "cheerio"],
-  },
+  // トランスパイル対象のパッケージを指定
+  transpilePackages: ["lucide-react", "@radix-ui/react-label", "@radix-ui/react-switch", "class-variance-authority"],
 }
 
 module.exports = nextConfig
