@@ -9,7 +9,7 @@ const nextConfig = {
     // 本番ビルド時にTypeScriptエラーを無視する
     ignoreBuildErrors: true,
   },
-  // Webpackの設定を追加
+  // Webpackの設定をカスタマイズ
   webpack: (config, { isServer }) => {
     // undiciモジュールの問題を回避
     if (!isServer) {
@@ -18,9 +18,15 @@ const nextConfig = {
         fs: false,
         net: false,
         tls: false,
+        undici: false,
       }
     }
+
     return config
+  },
+  // 実験的機能を有効化
+  experimental: {
+    serverComponentsExternalPackages: ["axios", "cheerio"],
   },
 }
 

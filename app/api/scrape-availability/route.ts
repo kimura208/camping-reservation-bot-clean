@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import axios from "axios"
 import * as cheerio from "cheerio"
 
-export const dynamic = "force-dynamic"
+export const dynamic = "force_dynamic"
 
 // LINE通知を送信する関数
 async function sendLineNotification(message: string) {
@@ -138,31 +138,14 @@ export async function POST(request: Request) {
 // GETメソッドを実装
 export async function GET() {
   try {
-    // 環境変数から情報を取得
-    const checkDate = process.env.NEXT_PUBLIC_CHECK_DATE || "2025-07-26" // デフォルト値を設定
-
-    console.log(`Starting availability check for date: ${checkDate}`)
-
-    // 実際にキャンプ場の空き状況をチェック
-    const result = await checkCampingAvailability(checkDate)
-
-    // 空きがあった場合、LINE通知を送信
-    if (result.isAvailable) {
-      const message = `${checkDate}の孫太郎オートキャンプ場に空きが出ました！\n今すぐ予約しましょう！\n予約ページ: ${result.url}`
-      await sendLineNotification(message)
-      console.log("空きが見つかりました！通知を送信しました。")
-    } else {
-      console.log("空きはありませんでした。")
-    }
-
+    // 簡略化したレスポンス
     return NextResponse.json({
       success: true,
-      message: "Availability check completed",
-      result,
+      message: "Scrape availability endpoint is working",
       timestamp: new Date().toISOString(),
     })
   } catch (error) {
-    console.error("Error in check-availability API:", error)
+    console.error("Error in scrape-availability API:", error)
     return NextResponse.json(
       {
         success: false,
@@ -172,3 +155,4 @@ export async function GET() {
     )
   }
 }
+
