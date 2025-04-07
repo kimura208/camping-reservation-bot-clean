@@ -4,17 +4,21 @@ on:
   schedule:
     # 15分ごとに実行（UTCタイムゾーン）
     - cron: '*/15 * * * *'
-  workflow_dispatch: # 手動実行用
+  workflow_dispatch: # 手動実行用のトリガー
 
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
+      - name: Get current time
+        run: echo "Current time is $(date)"
+      
       - name: Check availability
         run: |
-          curl -X GET "https://camping-reservation-bot-new.vercel.app/api/check-availability"
+          echo "Checking camping availability..."
+          response=$(curl -s -X GET "https://camping-reservation-bot-new.vercel.app/api/check-availability")
+          echo "Response: $response"
         continue-on-error: true # エラーが発生しても続行
       
       - name: Report status
-        run: |
-          echo "Availability check completed at $(date)"
+        run: echo "Availability check completed at $(date)"

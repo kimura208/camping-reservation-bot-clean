@@ -1,9 +1,4 @@
 {
-  "crons": [
-    {
-      "path": "/api/check-availability",
-      "schedule": "*/15 * * * *"
-    }
-  ]
+  "name": "camping-reservation-bot-new",
+  "version": 2
 }
-
