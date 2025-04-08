@@ -16,47 +16,16 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
-          cache: 'npm' # 依存関係のキャッシュを有効化
+          node-version: '16' # 18から16に変更
           
       - name: Install dependencies
         run: npm install axios cheerio @line/bot-sdk
         
       - name: Run availability check
-        id: check-availability
         run: node .github/scripts/check-availability.js
         env:
           NEXT_PUBLIC_CHECK_DATE: ${{ secrets.NEXT_PUBLIC_CHECK_DATE || '2025-07-26' }}
           NEXT_PUBLIC_CAMPING_URL: ${{ secrets.NEXT_PUBLIC_CAMPING_URL || 'https://asp.hotel-story.ne.jp/ver3d/di/?hcod1=08300&hcod2=001&seek=on&def=seek' }}
           LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
           LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
-        continue-on-error: true # エラーが発生しても次のステップに進む
-      
-      # エラー通知ステップを追加
-      - name: Notify on failure
-        if: ${{ failure() || steps.check-availability.outcome == 'failure' }}
-        run: |
-          if [ -n "${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}" ] && [ -n "${{ secrets.LINE_USER_ID }}" ]; then
-            node -e "
-              const { Client } = require('@line/bot-sdk');
-              const client = new Client({
-                channelAccessToken: '${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}'
-              });
-              
-              async function sendMessage() {
-                try {
-                  await client.pushMessage('${{ secrets.LINE_USER_ID }}', {
-                    type: 'text',
-                    text: '⚠️ 監視スクリプトの実行中にエラーが発生しました。GitHub Actionsのログを確認してください。'
-                  });
-                  console.log('Error notification sent');
-                } catch (error) {
-                  console.error('Failed to send notification:', error);
-                }
-              }
-              
-              sendMessage();
-            "
-          else
-            echo "LINE credentials not set, skipping notification"
-          fi
+          NODE_TLS_REJECT_UNAUTHORIZED: '0' # SSL証明書の検証を無効化（セキュリティ上の理由から本番環境では推奨されません）
