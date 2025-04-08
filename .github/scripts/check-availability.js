@@ -1,6 +1,10 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
 const { Client } = require("@line/bot-sdk");
+<<<<<<< HEAD
+=======
+const https = require("https");
+>>>>>>> d3dfd0e (Fix SSL issues in check-availability script)
 
 // LINE Messaging APIの設定
 const lineConfig = {
@@ -9,6 +13,15 @@ const lineConfig = {
 
 // LINEクライアントの初期化
 const client = new Client(lineConfig);
+<<<<<<< HEAD
+=======
+
+// カスタムHTTPSエージェントを作成（SSL問題を回避）
+const httpsAgent = new https.Agent({
+  rejectUnauthorized: false, // 自己署名証明書を許可（注意: 本番環境では推奨されません）
+  secureOptions: require('constants').SSL_OP_LEGACY_SERVER_CONNECT, // レガシーSSL接続を許可
+});
+>>>>>>> d3dfd0e (Fix SSL issues in check-availability script)
 
 // LINE通知を送信する関数
 async function sendLineNotification(message) {
@@ -56,6 +69,10 @@ async function checkCampingAvailability(date) {
         "Accept-Language": "ja,en-US;q=0.9,en;q=0.8",
       },
       timeout: 30000, // タイムアウトを30秒に設定
+<<<<<<< HEAD
+=======
+      httpsAgent: httpsAgent, // カスタムHTTPSエージェントを使用
+>>>>>>> d3dfd0e (Fix SSL issues in check-availability script)
     });
 
     const html = response.data;
@@ -153,4 +170,8 @@ async function main() {
 }
 
 // スクリプトを実行
+<<<<<<< HEAD
 main();
+=======
+main();
+>>>>>>> d3dfd0e (Fix SSL issues in check-availability script)
