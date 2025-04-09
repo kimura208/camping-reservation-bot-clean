@@ -1,19 +1,14 @@
 # 一時的に無効化
+# name: Check Camping Availability
 # on:
 #   schedule:
 #     - cron: '*/15 * * * *'
 #   workflow_dispatch:
 
 # 代わりに手動実行のみ許可
+name: Check Camping Availability
 on:
   workflow_dispatch:
-name: Check Camping Availability
-
-on:
-  schedule:
-    # 15分ごとに実行（UTCタイムゾーン）
-    - cron: '*/15 * * * *'
-  workflow_dispatch: # 手動実行用のトリガー
 
 jobs:
   check:
